@@ -1,0 +1,26 @@
+[package]
+name = "photo-wall"
+version = "0.1.0"
+description = "照片牆 - Photo Wall App"
+authors = ["ai_manager"]
+edition = "2021"
+
+[lib]
+name = "photo_wall_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+image = { version = "0.25", features = ["jpeg", "png", "gif", "webp", "tiff", "bmp"] }
+walkdir = "2"
+kamadak-exif = "0.6"
+rayon = "1.10"
