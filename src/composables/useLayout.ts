@@ -27,7 +27,7 @@ export function useLayout() {
         viewport: { width: number; height: number },
         existingCards: PhotoCard[],
         isMain: boolean = false
-    ): Omit<PhotoCard, 'state' | 'enterDelay'> {
+    ): Omit<PhotoCard, 'state' | 'enterDelay' | 'thumbnail'> {
         const rng = seededRng(rngSeed.value + index * 31337)
 
         // 照片顯示尺寸 — 根據原始比例
