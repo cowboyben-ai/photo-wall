@@ -15,6 +15,7 @@ export function usePhotoWall() {
     // ── 狀態 ──
     const allPhotos = ref<PhotoInfo[]>([])
     const visibleCards = ref<PhotoCard[]>([])
+    const isSleeping = ref(false)
     const settings = ref<AppSettings>({
         sourceFolder: '',
         speed: 'medium',
@@ -58,6 +59,8 @@ export function usePhotoWall() {
 
     // ── 排程計時器 ──
     let addTimer: ReturnType<typeof setTimeout> | null = null
+    let scheduleTimer: ReturnType<typeof setInterval> | null = null
+    let refreshTimer: ReturnType<typeof setInterval> | null = null
     let photoIndex = 0
     let cardIdCounter = 0
 
@@ -99,6 +102,10 @@ export function usePhotoWall() {
 
     // ── 讀取照片 ──
     async function loadFolder(folderPath: string) {
+        if (isSleeping.value) {
+            console.log('Skipping loadFolder: currently in sleep mode')
+            return
+        }
         isLoading.value = true
         loadProgress.value = 0
         error.value = null
@@ -334,9 +341,57 @@ export function usePhotoWall() {
         saveToStorage()
     }
 
+    // ── 排程邏輯 ──
+    function checkSleepSchedule() {
+        const now = new Date()
+        const hours = now.getHours()
+        const minutes = now.getMinutes()
+        const totalMinutes = hours * 60 + minutes
+
+        const SLEEP_START = 23 * 60 + 30 // 23:30
+        const SLEEP_END = 5 * 60         // 05:00
+
+        // 判斷是否在休眠區間 (跨夜判斷)
+        const shouldSleep = totalMinutes >= SLEEP_START || totalMinutes < SLEEP_END
+
+        if (shouldSleep && !isSleeping.value) {
+            console.log('[Schedule] Entering sleep mode')
+            isSleeping.value = true
+            stopWall()
+            visibleCards.value = []
+        } else if (!shouldSleep && isSleeping.value) {
+            console.log('[Schedule] Waking up from sleep mode')
+            isSleeping.value = false
+            if (settings.value.sourceFolder) {
+                loadFolder(settings.value.sourceFolder)
+            }
+        }
+    }
+
+    function initScheduler() {
+        // 1. 立即檢查一次休眠狀態
+        checkSleepSchedule()
+
+        // 2. 每分鐘檢查一次休眠排程
+        if (scheduleTimer) clearInterval(scheduleTimer)
+        scheduleTimer = setInterval(checkSleepSchedule, 60000)
+
+        // 3. 每 6 小時重新載入照片
+        if (refreshTimer) clearInterval(refreshTimer)
+        const SIX_HOURS = 6 * 60 * 60 * 1000
+        refreshTimer = setInterval(() => {
+            if (!isSleeping.value && settings.value.sourceFolder) {
+                console.log('[Schedule] Periodic 6-hour refresh...')
+                loadFolder(settings.value.sourceFolder)
+            }
+        }, SIX_HOURS)
+    }
+
     // ── 清理 ──
     onUnmounted(() => {
         stopWall()
+        if (scheduleTimer) clearInterval(scheduleTimer)
+        if (refreshTimer) clearInterval(refreshTimer)
     })
 
     return {
@@ -349,6 +404,7 @@ export function usePhotoWall() {
         hasLoaded,
         error,
         isRunning,
+        isSleeping,
         // 方法
         loadFolder,
         loadDefaultFolder,
@@ -357,5 +413,6 @@ export function usePhotoWall() {
         stopWall,
         restartWall,
         updateSettings,
+        initScheduler,
     }
 }

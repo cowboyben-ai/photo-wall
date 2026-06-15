@@ -166,6 +166,17 @@
       </div>
     </transition>
 
+    <!-- 5.5 休眠螢幕 -->
+    <transition name="fade">
+      <div v-if="isSleeping" class="sleep-screen">
+        <div class="sleep-content">
+          <q-icon name="bedtime" class="sleep-icon" />
+          <div class="sleep-title">休眠中</div>
+          <div class="sleep-subtitle">預計 05:00 恢復播映</div>
+        </div>
+      </div>
+    </transition>
+
     <!-- 6. 點擊放大 Overlay -->
     <transition name="overlay">
       <div v-if="zoomPhoto" class="photo-overlay" @click="zoomPhoto = null">
@@ -211,15 +222,20 @@ const {
   isLoading,
   loadProgress,
   hasLoaded,
+  isSleeping,
   chooseFolderAndLoad,
   loadDefaultFolder,
-  restartWall
+  restartWall,
+  initScheduler
 } = usePhotoWall()
 
 const showSettings = ref(false)
 const zoomPhoto = ref<PhotoCard | null>(null)
 
 onMounted(async () => {
+  // 啟動排程 (休眠與定期重新載入)
+  initScheduler()
+  
   // 啟動時嘗試讀取預設照片目錄
   await loadDefaultFolder()
 })
@@ -246,5 +262,40 @@ onMounted(async () => {
   position: absolute;
   inset: 0;
   perspective: 1000px;
+}
+
+/* 休眠螢幕樣式 */
+.sleep-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1.5s ease;
+}
+
+.sleep-content {
+  text-align: center;
+  color: rgba(212, 169, 106, 0.2);
+}
+
+.sleep-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.sleep-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  letter-spacing: 8px;
+  margin-bottom: 8px;
+}
+
+.sleep-subtitle {
+  font-size: 14px;
+  letter-spacing: 2px;
+  opacity: 0.6;
 }
 </style>
