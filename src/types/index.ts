@@ -33,6 +33,7 @@ export interface PhotoCard {
     // Ken Burns
     kenBurns: boolean
     isMain: boolean
+    order: number
 }
 
 // 應用設定
@@ -58,7 +59,7 @@ export interface AppSettings {
 
 // 速度對應表 (ms)
 export const SPEED_MAP: Record<AppSettings['speed'], { lifespan: number; interval: number }> = {
-    slow: { lifespan: 115000, interval: 14500 },
-    medium: { lifespan: 18000, interval: 12500 },
-    fast: { lifespan: 6000, interval: 1800 },
+    slow: { lifespan: 165000, interval: 14500 },
+    medium: { lifespan: 118000, interval: 12500 },
+    fast: { lifespan: 16000, interval: 1800 },
 }

@@ -63,6 +63,7 @@ export function usePhotoWall() {
     let refreshTimer: ReturnType<typeof setInterval> | null = null
     let photoIndex = 0
     let cardIdCounter = 0
+    let cardOrderCounter = 0
 
     const isRunning = computed(() => allPhotos.value.length > 0)
     const isPromotingMain = ref(false)
@@ -94,6 +95,10 @@ export function usePhotoWall() {
         // z-index 提到最高
         const maxZ = visibleCards.value.reduce((m, c) => Math.max(m, c.zIndex % 10000), 0)
         target.zIndex = 10000 + maxZ + 1
+
+        // 更新排序計數，確保它被視為「最新」的照片
+        cardOrderCounter++
+        target.order = cardOrderCounter
 
         setTimeout(() => {
             isPromotingMain.value = false
@@ -222,7 +227,7 @@ export function usePhotoWall() {
 
             // 如果超過數量上限，先觸發退場，並在 2.5 秒後再加入新照片
             if (currentActive.length >= limit) {
-                const oldest = [...currentActive].sort((a, b) => a.zIndex % 10000 - b.zIndex % 10000)[0]
+                const oldest = [...currentActive].sort((a, b) => a.order - b.order)[0]
                 if (oldest) {
                     oldest.state = 'leaving'
 
@@ -289,6 +294,7 @@ export function usePhotoWall() {
             state: 'entering',
             enterDelay: 0,
             kenBurns: settings.value.kenBurnsEnabled && layout.kenBurns,
+            order: ++cardOrderCounter
         }
 
         // 新照片 z-index 計算：主照片給予極高基數確保在最上層
